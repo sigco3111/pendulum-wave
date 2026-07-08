@@ -15,6 +15,7 @@
 | **모델** | minimax-M3 |
 | **실행 환경** | OpenCode CLI |
 | **저장소** | [`sigco3111/pendulum-wave`](https://github.com/sigco3111/pendulum-wave) |
+| **라이선스** | MIT |
 | **상태** | 🚧 bootstrap 단계 — README 초기화 완료, 본 코드는 OpenCode CLI에서 생성 예정 |
 
 ### 📝 사용된 프롬프트 (원문)
