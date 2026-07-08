@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Pendulum Wave · 3D</title>
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --panel-bg: rgba(15, 20, 35, 0.62);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --text: #e0e6f0;
+      --text-dim: #a0aab8;
+      --text-faint: #6c7a90;
+      --accent: #4d9fff;
+      --accent-2: #6b66ff;
+      --accent-glow: rgba(77, 159, 255, 0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Pretendard', 'Segoe UI', sans-serif;
+      font-feature-settings: "tnum";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #root {
+      position: fixed;
+      inset: 0;
+    }
+
+    #root canvas {
+      display: block;
+    }
+
+    #panel {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      width: 304px;
+      max-height: calc(100vh - 36px);
+      padding: 20px 22px 18px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(22px) saturate(160%);
+      -webkit-backdrop-filter: blur(22px) saturate(160%);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      box-shadow:
+        0 24px 64px rgba(0, 0, 0, 0.5),
+        0 2px 8px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      z-index: 10;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    #panel::-webkit-scrollbar { width: 0; }
+
+    #panel header {
+      margin-bottom: 18px;
+    }
+
+    #panel h1 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+      background: linear-gradient(
+        100deg,
+        #ff6b6b 0%,
+        #ffd93d 25%,
+        #6bcf7f 50%,
+        #4d9fff 75%,
+        #b66bff 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+
+    #panel .meta {
+      font-size: 10.5px;
+      color: var(--text-faint);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .row button {
+      flex: 1;
+      padding: 9px 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      letter-spacing: -0.005em;
+    }
+
+    .row button:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.22);
+      transform: translateY(-1px);
+    }
+
+    .row button:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .row button.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-color: transparent;
+      color: white;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .row button.primary:hover {
+      box-shadow: 0 6px 16px var(--accent-glow);
+    }
+
+    .slider-group {
+      margin-bottom: 13px;
+    }
+
+    .slider-group label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 11.5px;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+
+    .slider-group label span {
+      color: var(--text);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      font-size: 12px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+      appearance: none;
+      -webkit-appearance: none;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 8px var(--accent-glow);
+      transition: transform 0.12s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.18);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .checkbox-row {
+      margin: 4px 0 14px;
+      flex-direction: column;
+      gap: 9px;
+      align-items: flex-start;
+    }
+
+    .checkbox-row label {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 12px;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-weight: 500;
+      transition: color 0.12s ease;
+    }
+
+    .checkbox-row label:hover {
+      color: var(--text);
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .info {
+      padding: 11px 13px;
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 10px;
+      font-size: 11px;
+      font-family: ui-monospace, 'SF Mono', 'Monaco', 'Consolas', monospace;
+      color: var(--text-faint);
+      line-height: 1.7;
+      letter-spacing: 0.01em;
+    }
+
+    .info span {
+      color: #c8d0e0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hint {
+      margin-top: 12px;
+      font-size: 9.5px;
+      color: #4a5570;
+      text-align: center;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    #panel header {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+
+    .lang-toggle {
+      position: absolute;
+      top: -2px;
+      right: -4px;
+      display: inline-flex;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 2px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-faint);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: 600;
+    }
+
+    .lang-btn:hover {
+      color: var(--text);
+    }
+
+    .lang-btn.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      box-shadow: 0 2px 6px var(--accent-glow);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      color: var(--accent);
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      z-index: 100;
+      transition: opacity 0.5s ease;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #loading::after {
+      content: '';
+      position: absolute;
+      bottom: calc(50% - 30px);
+      width: 40px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; transform: scaleX(0.5); }
+      50% { opacity: 1; transform: scaleX(1); }
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 720px) {
+      #panel {
+        width: calc(100vw - 24px);
+        right: 12px;
+        left: 12px;
+        top: 12px;
+        max-height: 60vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <div id="panel" role="region" aria-label="Pendulum Wave Controls">
+    <header>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button type="button" class="lang-btn active" data-lang="ko" id="langKo">한국어</button>
+        <button type="button" class="lang-btn" data-lang="en" id="langEn">English</button>
+      </div>
+      <h1 id="titleText">Pendulum Wave</h1>
+      <p class="meta" id="subtitleText">15 bobs · Harvard Lecture Demo</p>
+    </header>
+
+    <div class="row">
+      <button id="playPauseBtn" class="primary" type="button">⏸  일시정지</button>
+      <button id="resetBtn" type="button">↻  초기화</button>
+    </div>
+
+    <div class="slider-group">
+      <label><span class="label-text" id="nLabel">기준 진동수</span> <span id="nVal">30</span></label>
+      <input id="nSlider" type="range" min="15" max="60" value="30" step="1" />
+    </div>
+
+    <div class="slider-group">
+      <label><span class="label-text" id="tLabel">전체 주기</span> <span id="tVal">60s</span></label>
+      <input id="tSlider" type="range" min="20" max="120" value="60" step="1" />
+    </div>
+
+    <div class="slider-group">
+      <label><span class="label-text" id="thetaLabel">최대 각도</span> <span id="thetaVal">25°</span></label>
+      <input id="thetaSlider" type="range" min="5" max="45" value="25" step="1" />
+    </div>
+
+    <div class="slider-group">
+      <label><span class="label-text" id="speedLabel">시간 배율</span> <span id="speedVal">1.0×</span></label>
+      <input id="speedSlider" type="range" min="0.1" max="3.0" value="1.0" step="0.1" />
+    </div>
+
+    <div class="row checkbox-row">
+      <label><input id="trailsToggle" type="checkbox" checked /> <span class="cb-text" id="trailsLabel">궤적 표시</span></label>
+      <label><input id="shadowsToggle" type="checkbox" checked /> <span class="cb-text" id="shadowsLabel">부드러운 그림자</span></label>
+    </div>
+
+    <div class="info" aria-live="polite">
+      <div><span class="info-label" id="simTLabel">시뮬 시간</span> = <span id="timeVal">0.00</span> s</div>
+      <div><span class="info-label" id="lRangeLabel">줄 길이 범위</span> = <span id="lMinVal">0.000</span>–<span id="lMaxVal">0.000</span> m</div>
+      <div><span class="info-label" id="tLongLabel">긴 주기</span> = <span id="tMinVal">0.00</span> s &nbsp;·&nbsp; <span class="info-label" id="freqLabel">주파수</span> = <span id="fVal">0.00</span> Hz</div>
+    </div>
+
+    <p class="hint" id="hintText">드래그 · 스크롤 · 우클릭 드래그</p>
+  </div>
+
+  <div id="loading"><span id="loadingText">three.js 로딩 중</span></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+    // =============================================================
+    //  PHYSICS CONTRACT (locked)
+    // -------------------------------------------------------------
+    //  L_i = g * ( T_cycle / (2π (N_base + i)) )²          (i = 0..14)
+    //  θ_i(t) = θ_max * cos( ω_i * t ),   ω_i = sqrt(g / L_i)
+    //
+    //  N_BASE = base oscillation count of the LONGEST pendulum
+    //  T_CYCLE = seconds for the whole system to resync
+    //  thetaMax in radians (slider input is degrees)
+    // =============================================================
+    const G = 9.81;
+    const N_PENDULUMS = 15;
+    const SPACING = 0.18;          // m, horizontal distance between pivots
+    const BOB_RADIUS = 0.042;      // m
+    const STRING_RADIUS = 0.0035;  // m
+    const PIVOT_RADIUS = 0.014;    // m
+    const TRAIL_POINTS = 110;      // per pendulum
+
+    // ---- Live, mutable state (driven by UI) --------------------
+    let N_base = 30;                                   // base osc count
+    let T_cycle = 60;                                  // resync period (s)
+    let thetaMax = (25 * Math.PI) / 180;              // amplitude (rad)
+    let timeScale = 1.0;
+    let isPaused = false;
+    let showTrails = true;
+    let showShadows = true;
+
+    // ---- Simulation time (independent of real time) -----------
+    let simTime = 0;
+    let lastReal = performance.now();
+    let lastTrailUpdate = 0;
+    const TRAIL_SAMPLE_DT = 1 / 60;   // sample once per rendered frame
+
+    // ---- Compute lengths from the contract -------------------
+    function computeLengths(N, T_cycle) {
+      const L = new Float64Array(N_PENDULUMS);
+      for (let i = 0; i < N_PENDULUMS; i++) {
+        const period = T_cycle / (N + i);     // period of pendulum i (seconds)
+        L[i] = G * Math.pow(period / (2 * Math.PI), 2);
+      }
+      return L;
+    }
+    let lengths = computeLengths(N_base, T_cycle);
+
+    // =============================================================
+    //  THREE.JS SETUP
+    // =============================================================
+    const root = document.getElementById('root');
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: 'high-performance'
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    root.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0e1a);
+    scene.fog = new THREE.Fog(0x0a0e1a, 3.5, 14);
+
+    // Environment map for proper metallic reflections (RoomEnvironment)
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    pmrem.compileEquirectangularShader();
+    const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = envTex;
+
+    const camera = new THREE.PerspectiveCamera(
+      42,
+      window.innerWidth / window.innerHeight,
+      0.01,
+      100
+    );
+    const DEFAULT_CAM_POS = new THREE.Vector3(2.4, 1.05, 3.6);
+    const DEFAULT_CAM_TGT = new THREE.Vector3(0, 0.42, 0);
+    camera.position.copy(DEFAULT_CAM_POS);
+    camera.lookAt(DEFAULT_CAM_TGT);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.copy(DEFAULT_CAM_TGT);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.minDistance = 1.2;
+    controls.maxDistance = 9.0;
+    controls.maxPolarAngle = Math.PI * 0.55;  // no looking from below floor
+    controls.update();
+
+    // =============================================================
+    //  LIGHTING
+    // =============================================================
+    const hemi = new THREE.HemisphereLight(0xc4d8ff, 0x202030, 0.45);
+    scene.add(hemi);
+
+    const sun = new THREE.DirectionalLight(0xfff3df, 1.55);
+    sun.position.set(3.5, 5.2, 2.5);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.near = 0.1;
+    sun.shadow.camera.far = 12;
+    sun.shadow.camera.left = -2.4;
+    sun.shadow.camera.right = 2.4;
+    sun.shadow.camera.top = 2.4;
+    sun.shadow.camera.bottom = -1.2;
+    sun.shadow.bias = -0.0005;
+    sun.shadow.normalBias = 0.02;
+    sun.shadow.radius = 4;
+    scene.add(sun);
+
+    const rim = new THREE.DirectionalLight(0x88a6ff, 0.45);
+    rim.position.set(-2.5, 2.0, -3.0);
+    scene.add(rim);
+
+    const accent = new THREE.PointLight(0xffd86b, 0.6, 4.0, 1.6);
+    accent.position.set(-0.8, 1.0, 1.5);
+    scene.add(accent);
+
+    // =============================================================
+    //  FLOOR + GRID
+    // =============================================================
+    const floorMat = new THREE.MeshStandardMaterial({
+      color: 0x141826,
+      roughness: 0.88,
+      metalness: 0.08,
+    });
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(30, 30), floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = 0;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const grid = new THREE.GridHelper(20, 40, 0x2a3550, 0x1a2030);
+    grid.material.transparent = true;
+    grid.material.opacity = 0.45;
+    grid.position.y = 0.001;
+    scene.add(grid);
+
+    // =============================================================
+    //  SUPPORT FRAME (beam + posts)
+    // =============================================================
+    const frameGroup = new THREE.Group();
+    scene.add(frameGroup);
+
+    function beamYPos() {
+      // Top of longest bob + a small clearance above
+      return Math.max(...lengths) + 0.16;
+    }
+
+    function buildFrame() {
+      // Clean up old
+      while (frameGroup.children.length) {
+        const c = frameGroup.children.pop();
+        c.geometry?.dispose?.();
+        c.material?.dispose?.();
+      }
+
+      const by = beamYPos();
+      const beamLen = N_PENDULUMS * SPACING + 0.5;
+
+      // Horizontal beam (cylinder rotated to be horizontal)
+      const beamMat = new THREE.MeshStandardMaterial({
+        color: 0x2b2118,
+        roughness: 0.45,
+        metalness: 0.55,
+      });
+      const beam = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.028, 0.028, beamLen, 28),
+        beamMat
+      );
+      beam.rotation.z = Math.PI / 2;
+      beam.position.y = by;
+      beam.castShadow = true;
+      beam.receiveShadow = true;
+      frameGroup.add(beam);
+
+      // Beam end caps
+      const capMat = new THREE.MeshStandardMaterial({
+        color: 0x5a4a36,
+        roughness: 0.35,
+        metalness: 0.85,
+      });
+      for (const px of [-beamLen / 2, beamLen / 2]) {
+        const cap = new THREE.Mesh(
+          new THREE.SphereGeometry(0.034, 18, 14),
+          capMat
+        );
+        cap.position.set(px, by, 0);
+        cap.castShadow = true;
+        frameGroup.add(cap);
+      }
+
+      // Two vertical posts going from beam down to floor
+      const postMat = new THREE.MeshStandardMaterial({
+        color: 0x1a1410,
+        roughness: 0.4,
+        metalness: 0.65,
+      });
+      for (const px of [-beamLen / 2 + 0.05, beamLen / 2 - 0.05]) {
+        const post = new THREE.Mesh(
+          new THREE.BoxGeometry(0.045, by, 0.045),
+          postMat
+        );
+        post.position.set(px, by / 2, 0);
+        post.castShadow = true;
+        post.receiveShadow = true;
+        frameGroup.add(post);
+
+        const base = new THREE.Mesh(
+          new THREE.BoxGeometry(0.16, 0.024, 0.16),
+          postMat
+        );
+        base.position.set(px, 0.012, 0);
+        base.castShadow = true;
+        base.receiveShadow = true;
+        frameGroup.add(base);
+      }
+
+      // Cross-brace foot bar (decorative, on the floor between posts)
+      const brace = new THREE.Mesh(
+        new THREE.BoxGeometry(beamLen - 0.1, 0.018, 0.05),
+        postMat
+      );
+      brace.position.set(0, 0.03, 0);
+      brace.castShadow = true;
+      brace.receiveShadow = true;
+      frameGroup.add(brace);
+    }
+
+    // =============================================================
+    //  PENDULUMS
+    // =============================================================
+    const pendulums = [];
+    const pendulumsGroup = new THREE.Group();
+    scene.add(pendulumsGroup);
+
+    const PIVOT_X0 = -((N_PENDULUMS - 1) / 2) * SPACING;
+
+    function makeBobColor(i) {
+      // Rainbow across the 15 bobs (HSL hue 0 → 0.78 — red → violet)
+      const hue = (i / (N_PENDULUMS - 1)) * 0.78;
+      return new THREE.Color().setHSL(hue, 0.85, 0.56);
+    }
+
+    function disposePendulum(p) {
+      p.group.parent?.remove(p.group);
+      p.bob.geometry.dispose();
+      p.bob.material.dispose();
+      p.string.geometry.dispose();
+      p.string.material.dispose();
+      p.pivot.geometry.dispose();
+      p.pivot.material.dispose();
+      if (p.trail) {
+        p.trail.line.parent?.remove(p.trail.line);
+        p.trail.line.geometry.dispose();
+        p.trail.line.material.dispose();
+      }
+    }
+
+    function buildPendulums() {
+      // Clean up
+      while (pendulums.length) disposePendulum(pendulums.pop());
+
+      const by = beamYPos();
+
+      for (let i = 0; i < N_PENDULUMS; i++) {
+        const L = lengths[i];
+        const x = PIVOT_X0 + i * SPACING;
+        const color = makeBobColor(i);
+
+        const group = new THREE.Group();
+        group.position.set(x, by, 0);
+
+        // Pivot cap
+        const pivotMat = new THREE.MeshStandardMaterial({
+          color: 0x1a1a1a,
+          roughness: 0.25,
+          metalness: 0.95,
+        });
+        const pivot = new THREE.Mesh(
+          new THREE.SphereGeometry(PIVOT_RADIUS, 14, 12),
+          pivotMat
+        );
+        group.add(pivot);
+
+        // String (cylinder, anchored at top, hanging down by L)
+        const stringMat = new THREE.MeshStandardMaterial({
+          color: 0xb8b8c0,
+          roughness: 0.55,
+          metalness: 0.15,
+        });
+        const string = new THREE.Mesh(
+          new THREE.CylinderGeometry(
+            STRING_RADIUS,
+            STRING_RADIUS,
+            L,
+            8,
+            1,
+            false
+          ),
+          stringMat
+        );
+        // Cylinder is centered at origin along +Y/-Y; place so its top is at pivot
+        string.position.y = -L / 2;
+        string.castShadow = true;
+        group.add(string);
+
+        // Bob (sphere at end of string)
+        const bobMat = new THREE.MeshStandardMaterial({
+          color: color,
+          roughness: 0.22,
+          metalness: 0.88,
+          envMapIntensity: 1.0,
+        });
+        const bob = new THREE.Mesh(
+          new THREE.SphereGeometry(BOB_RADIUS, 32, 24),
+          bobMat
+        );
+        bob.position.y = -L;
+        bob.castShadow = true;
+        group.add(bob);
+
+        pendulumsGroup.add(group);
+
+        // Trail line (additive, same color as bob)
+        const trail = new Trail(color);
+
+        pendulums.push({ group, bob, string, pivot, trail, L, x, beamY: by, color });
+      }
+    }
+
+    // =============================================================
+    //  TRAIL (per pendulum)
+    // -------------------------------------------------------------
+    //  Uses a shift buffer of TRAIL_POINTS positions. New positions
+    //  are pushed to the end and oldest are dropped. Geometry is
+    //  updated in-place each frame.
+    // =============================================================
+    class Trail {
+      constructor(color) {
+        this.color = color.clone();
+        this.positions = []; // array of [x,y,z] flat
+        this.dirty = true;
+
+        const geom = new THREE.BufferGeometry();
+        const buf = new Float32Array(TRAIL_POINTS * 3);
+        geom.setAttribute('position', new THREE.BufferAttribute(buf, 3));
+        geom.setDrawRange(0, 0);
+
+        const mat = new THREE.LineBasicMaterial({
+          color: color,
+          transparent: true,
+          opacity: 0.78,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          linewidth: 1,
+        });
+
+        this.line = new THREE.Line(geom, mat);
+        this.line.frustumCulled = false;
+        this.line.renderOrder = 2;
+        scene.add(this.line);
+      }
+
+      push(x, y, z) {
+        this.positions.push(x, y, z);
+        if (this.positions.length > TRAIL_POINTS * 3) {
+          this.positions.splice(0, this.positions.length - TRAIL_POINTS * 3);
+        }
+        this.dirty = true;
+      }
+
+      flush() {
+        if (!this.dirty) return;
+        const arr = this.line.geometry.attributes.position.array;
+        const n = Math.min(this.positions.length / 3, TRAIL_POINTS);
+        for (let i = 0; i < n; i++) {
+          arr[i * 3 + 0] = this.positions[i * 3 + 0];
+          arr[i * 3 + 1] = this.positions[i * 3 + 1];
+          arr[i * 3 + 2] = this.positions[i * 3 + 2];
+        }
+        // Pad remaining with last point so drawRange doesn't pull (0,0,0)
+        if (n > 0 && n < TRAIL_POINTS) {
+          for (let i = n; i < TRAIL_POINTS; i++) {
+            arr[i * 3 + 0] = arr[(n - 1) * 3 + 0];
+            arr[i * 3 + 1] = arr[(n - 1) * 3 + 1];
+            arr[i * 3 + 2] = arr[(n - 1) * 3 + 2];
+          }
+        }
+        this.line.geometry.setDrawRange(0, n);
+        this.line.geometry.attributes.position.needsUpdate = true;
+        this.line.geometry.computeBoundingSphere();
+        this.dirty = false;
+      }
+
+      reset() {
+        this.positions.length = 0;
+        this.line.geometry.setDrawRange(0, 0);
+        this.dirty = true;
+        this.flush();
+      }
+
+      setVisible(v) {
+        this.line.visible = v;
+      }
+    }
+
+    // =============================================================
+    //  I18N — Korean (default) / English
+    // =============================================================
+    const TRANSLATIONS = {
+      ko: {
+        title: '펜듈럼 웨이브',
+        subtitle: '15개 추 · 하버드 강의 데모',
+        play: '⏸  일시정지',
+        pause: '▶  재생',
+        reset: '↻  초기화',
+        baseOsc: '기준 진동수',
+        cyclePeriod: '전체 주기',
+        maxAngle: '최대 각도',
+        timeScale: '시간 배율',
+        showTrails: '궤적 표시',
+        softShadows: '부드러운 그림자',
+        simT: '시뮬 시간',
+        lRange: '줄 길이 범위',
+        tLong: '긴 주기',
+        freq: '주파수',
+        hint: '드래그 · 스크롤 · 우클릭 드래그',
+        loading: 'three.js 로딩 중',
+        koLabel: '한국어',
+        enLabel: 'English',
+      },
+      en: {
+        title: 'Pendulum Wave',
+        subtitle: '15 bobs · Harvard Lecture Demo',
+        play: '⏸  Pause',
+        pause: '▶  Play',
+        reset: '↻  Reset',
+        baseOsc: 'Base oscillations',
+        cyclePeriod: 'Cycle period',
+        maxAngle: 'Max angle',
+        timeScale: 'Time scale',
+        showTrails: 'Show trails',
+        softShadows: 'Soft shadows',
+        simT: 'sim t',
+        lRange: 'L range',
+        tLong: 'longest T',
+        freq: 'freq',
+        hint: 'Drag · Scroll · Right-drag',
+        loading: 'Loading three.js',
+        koLabel: '한국어',
+        enLabel: 'English',
+      },
+    };
+
+    const LANG_KEY = 'pendulum-wave-lang';
+    // Default: Korean. Override with saved preference if present and valid.
+    let currentLang = (() => {
+      try {
+        const saved = localStorage.getItem(LANG_KEY);
+        if (saved === 'ko' || saved === 'en') return saved;
+      } catch (_) { /* localStorage may be blocked */ }
+      return 'ko';
+    })();
+
+    function applyTranslations(lang) {
+      const t = TRANSLATIONS[lang];
+      if (!t) return;
+      currentLang = lang;
+
+      // Null-safe text setter (some elements are removed after first paint,
+      // e.g. the loading overlay — calling textContent on a null ref would throw)
+      const setText = (id, txt) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = txt;
+      };
+
+      // Static labels
+      setText('titleText', t.title);
+      setText('subtitleText', t.subtitle);
+      setText('nLabel', t.baseOsc);
+      setText('tLabel', t.cyclePeriod);
+      setText('thetaLabel', t.maxAngle);
+      setText('speedLabel', t.timeScale);
+      setText('trailsLabel', t.showTrails);
+      setText('shadowsLabel', t.softShadows);
+      setText('simTLabel', t.simT);
+      setText('lRangeLabel', t.lRange);
+      setText('tLongLabel', t.tLong);
+      setText('freqLabel', t.freq);
+      setText('hintText', t.hint);
+      setText('loadingText', t.loading);
+      setText('langKo', t.koLabel);
+      setText('langEn', t.enLabel);
+
+      // Dynamic: play/pause button + reset button + lang toggle state
+      setPlayLabel();
+      const resetBtnEl = $('resetBtn');
+      if (resetBtnEl) resetBtnEl.textContent = t.reset;
+      $('langKo').classList.toggle('active', lang === 'ko');
+      $('langEn').classList.toggle('active', lang === 'en');
+
+      // Persist
+      try { localStorage.setItem(LANG_KEY, lang); } catch (_) {}
+
+      // Keep <html lang> in sync for a11y / browser chrome
+      document.documentElement.lang = lang === 'ko' ? 'ko' : 'en';
+    }
+
+    // =============================================================
+    //  UI WIRING
+    // =============================================================
+    const $ = (id) => document.getElementById(id);
+    const playPauseBtn = $('playPauseBtn');
+    const resetBtn = $('resetBtn');
+    const nSlider = $('nSlider');
+    const tSlider = $('tSlider');
+    const thetaSlider = $('thetaSlider');
+    const speedSlider = $('speedSlider');
+    const trailsToggle = $('trailsToggle');
+    const shadowsToggle = $('shadowsToggle');
+    const nVal = $('nVal');
+    const tVal = $('tVal');
+    const thetaVal = $('thetaVal');
+    const speedVal = $('speedVal');
+    const timeVal = $('timeVal');
+    const lMinVal = $('lMinVal');
+    const lMaxVal = $('lMaxVal');
+    const tMinVal = $('tMinVal');
+    const fVal = $('fVal');
+
+    function setPlayLabel() {
+      const t = TRANSLATIONS[currentLang];
+      playPauseBtn.textContent = isPaused ? t.pause : t.play;
+    }
+
+    function updateInfoHUD() {
+      timeVal.textContent = simTime.toFixed(2);
+      const Lmin = lengths[lengths.length - 1];
+      const Lmax = lengths[0];
+      lMinVal.textContent = Lmin.toFixed(3);
+      lMaxVal.textContent = Lmax.toFixed(3);
+      // Longest pendulum period (smallest frequency)
+      const Tlong = T_cycle / N_base;
+      tMinVal.textContent = Tlong.toFixed(2);
+      fVal.textContent = (1 / Tlong).toFixed(2);
+    }
+
+    function rebuildSystem() {
+      lengths = computeLengths(N_base, T_cycle);
+      buildFrame();
+      buildPendulums();
+      // recenter camera target on the new beam mid-height
+      controls.target.set(0, beamYPos() * 0.55, 0);
+      controls.update();
+      updateInfoHUD();
+    }
+
+    playPauseBtn.addEventListener('click', () => {
+      isPaused = !isPaused;
+      setPlayLabel();
+    });
+
+    $('langKo').addEventListener('click', () => applyTranslations('ko'));
+    $('langEn').addEventListener('click', () => applyTranslations('en'));
+
+    resetBtn.addEventListener('click', () => {
+      simTime = 0;
+      lastTrailUpdate = 0;
+      for (const p of pendulums) p.trail.reset();
+      updateInfoHUD();
+    });
+
+    nSlider.addEventListener('input', (e) => {
+      N_base = parseInt(e.target.value, 10);
+      nVal.textContent = N_base;
+      rebuildSystem();
+    });
+
+    tSlider.addEventListener('input', (e) => {
+      T_cycle = parseFloat(e.target.value);
+      tVal.textContent = `${T_cycle}s`;
+      rebuildSystem();
+    });
+
+    thetaSlider.addEventListener('input', (e) => {
+      thetaMax = (parseFloat(e.target.value) * Math.PI) / 180;
+      thetaVal.textContent = `${e.target.value}°`;
+    });
+
+    speedSlider.addEventListener('input', (e) => {
+      timeScale = parseFloat(e.target.value);
+      speedVal.textContent = `${timeScale.toFixed(1)}×`;
+    });
+
+    trailsToggle.addEventListener('change', (e) => {
+      showTrails = e.target.checked;
+      if (!showTrails) {
+        for (const p of pendulums) p.trail.reset();
+      }
+      for (const p of pendulums) p.trail.setVisible(showTrails);
+    });
+
+    shadowsToggle.addEventListener('change', (e) => {
+      showShadows = e.target.checked;
+      renderer.shadowMap.enabled = showShadows;
+    });
+
+    // Window resize
+    window.addEventListener('resize', () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      renderer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    });
+
+    // =============================================================
+    //  ANIMATION LOOP
+    // =============================================================
+    function angleOf(i, t) {
+      // θ_i(t) = θ_max · cos( ω_i · t ),   ω_i = sqrt(g / L_i)
+      const omega = Math.sqrt(G / lengths[i]);
+      return thetaMax * Math.cos(omega * t);
+    }
+
+    function frame() {
+      requestAnimationFrame(frame);
+
+      const now = performance.now();
+      const realDt = Math.min(0.1, (now - lastReal) / 1000); // clamp huge gaps (tab switch)
+      lastReal = now;
+
+      if (!isPaused) {
+        simTime += realDt * timeScale;
+      }
+
+      const by = beamYPos();
+
+      for (let i = 0; i < pendulums.length; i++) {
+        const p = pendulums[i];
+        const theta = angleOf(i, simTime);
+
+        // Rotate the whole pendulum group around its pivot.
+        //   group.position = (x_pivot, beamY, 0)
+        //   local +Y axis is "string hanging down". Rotating about +Z
+        //   by angle θ swings the bob to +x for θ > 0. Bob world
+        //   position becomes ( x_pivot + L·sinθ , beamY − L·cosθ , 0 ).
+        p.group.rotation.z = theta;
+
+        if (showTrails && !isPaused && (simTime - lastTrailUpdate) >= TRAIL_SAMPLE_DT) {
+          const sx = p.x + p.L * Math.sin(theta);
+          const sy = by - p.L * Math.cos(theta);
+          p.trail.push(sx, sy, 0);
+        }
+      }
+
+      if (showTrails) {
+        for (const p of pendulums) p.trail.flush();
+      }
+
+      if ((simTime - lastTrailUpdate) >= TRAIL_SAMPLE_DT) {
+        lastTrailUpdate = simTime;
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    // =============================================================
+    //  HUD UPDATE (cheap; runs ~30 Hz)
+    // =============================================================
+    function hudTick() {
+      timeVal.textContent = simTime.toFixed(2);
+    }
+    setInterval(hudTick, 33);
+
+    // =============================================================
+    //  BOOTSTRAP
+    // =============================================================
+    applyTranslations(currentLang);  // applies default (ko) or saved preference
+    rebuildSystem();
+    setPlayLabel();
+    frame();
+
+    // Hide loading overlay after first paint
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const el = document.getElementById('loading');
+        if (el) {
+          el.classList.add('hidden');
+          setTimeout(() => el.remove(), 600);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
