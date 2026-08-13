@@ -10,11 +10,11 @@
 
 ## 🎬 라이브 데모
 
-> **👉 [https://pendulum-wave-one.vercel.app/](https://pendulum-wave-one.vercel.app/)** — 브라우저에서 바로 실행 (Three.js, 60fps)
+> **👉 [https://sigco3111.github.io/pendulum-wave/](https://sigco3111.github.io/pendulum-wave/)** — 브라우저에서 바로 실행 (Three.js, 60fps)
 
 | | |
 |---|---|
-| ![Demo](https://img.shields.io/badge/Live-Demo-7C3AED?style=for-the-badge&logo=vercel&logoColor=white) | [![Repo](https://img.shields.io/badge/GitHub-sigco3111%2Fpendulum--wave-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sigco3111/pendulum-wave) |
+| ![Demo](https://img.shields.io/badge/Live-Demo-222222?style=for-the-badge&logo=githubpages&logoColor=white) | [![Repo](https://img.shields.io/badge/GitHub-sigco3111%2Fpendulum--wave-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sigco3111/pendulum-wave) |
 | ![Status](https://img.shields.io/badge/Status-Live-22C55E?style=flat-square) | ![Stack](https://img.shields.io/badge/Stack-Three.js-FF6F00?style=flat-square&logo=three.js&logoColor=white) |
 | ![License](https://img.shields.io/badge/License-MIT-F1C40F?style=flat-square) | ![Deps](https://img.shields.io/badge/Deps-1_(CDN)-9CA3AF?style=flat-square) |
 
@@ -84,9 +84,9 @@ python3 -m http.server 8000
 # → http://localhost:8000
 ```
 
-### 방법 3: 라이브 데모 (Vercel)
+### 방법 3: 라이브 데모 (GitHub Pages)
 배포 후 URL이 발급되면 별도 설치 없이 바로 확인 가능합니다.
-👉 https://pendulum-wave-one.vercel.app/
+👉 https://sigco3111.github.io/pendulum-wave/
 
 ---
 
@@ -232,7 +232,7 @@ import map 표준 스펙을 사용해 bare specifier (`import * as THREE from 't
 
 | ID | 시나리오 | 결과 |
 |---|---|---|
-| V1 | Vercel alias `pendulum-wave-one.vercel.app` 200 + 34,468B (로컬 일치) | ✅ PASS |
+| V1 | GitHub Pages `sigco3111.github.io/pendulum-wave/` 200 + 34,468B (로컬 일치) | ✅ PASS |
 | V2 | `?N_base=30` (기본값) → 15개 추 동기 → 60초 후 재동기 흐름 확인 | ✅ PASS |
 | V3 | `?N_base=20` (느린 모드) → 더 긴 추들, 더 큰 진폭 | ✅ PASS |
 | V4 | `thetaMax = 35°` → 진폭 한계에서도 SHM 정확 (closed-form) | ✅ PASS |
